@@ -261,45 +261,49 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       sseRef.current.close();
     }
 
-    const es = new EventSource('/api/realtime');
-    sseRef.current = es;
+    try {
+      const es = new EventSource('/api/realtime');
+      sseRef.current = es;
 
-    es.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
+      es.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
 
-        if (data.type === 'KC_RATE_UPDATE' && data.kcRate) {
-          setKcRate(data.kcRate);
+          if (data.type === 'KC_RATE_UPDATE' && data.kcRate) {
+            setKcRate(data.kcRate);
+          }
+
+          if (data.type === 'NOTIFICATION' && data.notification) {
+            setNotifications((prev) => [
+              { ...data.notification, read: false },
+              ...prev.slice(0, 49),
+            ]);
+          }
+
+          if (data.type === 'TICK' || data.type === 'WALLET_UPDATE') {
+            setCurrentUser((user) => {
+              if (user?.id) {
+                loadUserData(user.id);
+              }
+              return user;
+            });
+          }
+        } catch {
+          // Ignore parse errors
         }
+      };
 
-        if (data.type === 'NOTIFICATION' && data.notification) {
-          setNotifications((prev) => [
-            { ...data.notification, read: false },
-            ...prev.slice(0, 49),
-          ]);
-        }
+      es.onerror = () => {
+        // Close EventSource on static host (e.g. Vercel) to avoid connection error loops
+        es.close();
+      };
 
-        if (data.type === 'TICK' || data.type === 'WALLET_UPDATE') {
-          // Refresh user data on tick
-          setCurrentUser((user) => {
-            if (user?.id) {
-              loadUserData(user.id);
-            }
-            return user;
-          });
-        }
-      } catch {
-        // Ignore parse errors
-      }
-    };
-
-    es.onerror = () => {
-      // Reconnect handled by browser
-    };
-
-    return () => {
-      es.close();
-    };
+      return () => {
+        es.close();
+      };
+    } catch {
+      return () => {};
+    }
   }, [loadUserData]);
 
   // ─ Init ────────────────────────────────────────────────────

@@ -583,9 +583,44 @@ export const api = {
   // Chat
   getChatMessages: async () => {
     try {
-      return await request('GET', '/api/chat');
+      const res = await request('GET', '/api/chat');
+      return Array.isArray(res) ? res : (res?.messages || []);
     } catch {
-      return { success: true, messages: [] };
+      const stored = typeof localStorage !== 'undefined' ? localStorage.getItem('kwz_chat_messages') : null;
+      if (stored) {
+        try {
+          return JSON.parse(stored);
+        } catch {}
+      }
+
+      const defaultMessages = [
+        {
+          id: 'chat-seed-1',
+          userId: 'usr-admin-001',
+          userName: 'Suporte KwanzaMiner',
+          userRole: 'superadmin',
+          message: 'Bem-vindo à comunidade KwanzaCoin! Apoio oficial e simulação online 24/7.',
+          isDirectAdmin: false,
+          createdAt: new Date(Date.now() - 3600000).toISOString(),
+        },
+        {
+          id: 'chat-seed-2',
+          userId: 'usr-demo-002',
+          userName: 'João Silva',
+          userRole: 'user',
+          message: 'Excelente taxa de retorno nos planos de mineração. Tudo a funcionar perfeitamente!',
+          isDirectAdmin: false,
+          createdAt: new Date(Date.now() - 1800000).toISOString(),
+        },
+      ];
+
+      if (typeof localStorage !== 'undefined') {
+        try {
+          localStorage.setItem('kwz_chat_messages', JSON.stringify(defaultMessages));
+        } catch {}
+      }
+
+      return defaultMessages;
     }
   },
 
@@ -597,7 +632,54 @@ export const api = {
     try {
       return await request('POST', '/api/chat/send', { userId, message, ...options });
     } catch {
-      return { success: true };
+      let userName = 'Investidor';
+      let userRole = 'user';
+
+      if (userId === 'usr-admin-001') {
+        userName = 'Kwanza Admin';
+        userRole = 'superadmin';
+      } else if (typeof localStorage !== 'undefined') {
+        try {
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('kwz_user_store_')) {
+              const u = JSON.parse(localStorage.getItem(key) || '{}');
+              if (u?.user?.id === userId) {
+                userName = u.user.name || userName;
+                userRole = u.user.role || userRole;
+                break;
+              }
+            }
+          }
+        } catch {}
+      }
+
+      const newMsg = {
+        id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        userId,
+        userName,
+        userRole,
+        message,
+        imageUrl: options?.imageUrl,
+        audioUrl: options?.audioUrl,
+        isDirectAdmin: options?.isDirectAdmin || false,
+        createdAt: new Date().toISOString(),
+      };
+
+      if (typeof localStorage !== 'undefined') {
+        try {
+          const stored = localStorage.getItem('kwz_chat_messages');
+          const list = stored ? JSON.parse(stored) : [];
+          list.push(newMsg);
+          localStorage.setItem('kwz_chat_messages', JSON.stringify(list));
+        } catch {}
+      }
+
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('new_chat_message', { detail: newMsg }));
+      }
+
+      return { success: true, message: newMsg };
     }
   },
 
