@@ -1,0 +1,6 @@
+{
+  "name": "KwanzaCoin - Mineração e Investimentos",
+  "description": "Plataforma profissional de mineração e investimentos digitais em Kwanza (AOA) com motor financeiro em tempo real, carteira, ledger auditável, KYC e painel administrativo.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
