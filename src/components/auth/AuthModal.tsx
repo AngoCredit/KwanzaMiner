@@ -193,7 +193,7 @@ export const AuthModal: React.FC = () => {
                     value={googleEmail}
                     onChange={(e) => setGoogleEmail(e.target.value)}
                     placeholder="seu.email@gmail.com"
-                    className="w-full pl-9 pr-3 py-2.5 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#1769D1]"
+                    className="w-full pl-9 pr-3 py-2.5 text-xs rounded-xl border border-slate-300 text-slate-900 bg-white placeholder-slate-400 focus:ring-2 focus:ring-[#1769D1]"
                   />
                 </div>
               </div>
@@ -211,7 +211,7 @@ export const AuthModal: React.FC = () => {
                     value={googleName}
                     onChange={(e) => setGoogleName(e.target.value)}
                     placeholder="Nome Completo"
-                    className="w-full pl-9 pr-3 py-2.5 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#1769D1]"
+                    className="w-full pl-9 pr-3 py-2.5 text-xs rounded-xl border border-slate-300 text-slate-900 bg-white placeholder-slate-400 focus:ring-2 focus:ring-[#1769D1]"
                   />
                 </div>
               </div>
@@ -232,7 +232,7 @@ export const AuthModal: React.FC = () => {
                     max={getMax18YearsAgoDateString()}
                     value={googleBirthDate}
                     onChange={(e) => setGoogleBirthDate(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2.5 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#1769D1]"
+                    className="w-full pl-9 pr-3 py-2.5 text-xs rounded-xl border border-slate-300 text-slate-900 bg-white placeholder-slate-400 focus:ring-2 focus:ring-[#1769D1]"
                   />
                 </div>
 
@@ -319,7 +319,7 @@ export const AuthModal: React.FC = () => {
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="Ex: Manuel António da Silva"
-                        className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#1769D1] focus:border-transparent"
+                        className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-300 text-slate-900 bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1769D1] focus:border-transparent"
                       />
                     </div>
                   </div>
@@ -338,7 +338,7 @@ export const AuthModal: React.FC = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="seu.email@exemplo.ao"
-                      className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#1769D1] focus:border-transparent"
+                      className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-300 text-slate-900 bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1769D1] focus:border-transparent"
                     />
                   </div>
                 </div>
@@ -358,7 +358,7 @@ export const AuthModal: React.FC = () => {
                           value={phone}
                           onChange={(e) => setPhone(e.target.value)}
                           placeholder="+244 923 456 789"
-                          className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#1769D1] focus:border-transparent"
+                          className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-300 text-slate-900 bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1769D1] focus:border-transparent"
                         />
                       </div>
                     </div>
@@ -383,7 +383,7 @@ export const AuthModal: React.FC = () => {
                           max={getMax18YearsAgoDateString()}
                           value={birthDate}
                           onChange={(e) => setBirthDate(e.target.value)}
-                          className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#1769D1] focus:border-transparent"
+                          className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-300 text-slate-900 bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1769D1] focus:border-transparent"
                         />
                       </div>
 
@@ -428,7 +428,7 @@ export const AuthModal: React.FC = () => {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••••••"
-                      className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#1769D1] focus:border-transparent"
+                      className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-300 text-slate-900 bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1769D1] focus:border-transparent"
                     />
                   </div>
                 </div>
@@ -446,7 +446,7 @@ export const AuthModal: React.FC = () => {
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         placeholder="••••••••••••"
-                        className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#1769D1] focus:border-transparent"
+                        className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-300 text-slate-900 bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1769D1] focus:border-transparent"
                       />
                     </div>
 
