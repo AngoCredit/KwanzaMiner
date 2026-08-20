@@ -168,8 +168,8 @@ class InMemoryDatabase {
 
   getAggregatedStats(): Stats {
     let totalInvestedAoa = 0;
-    Array.from(this.investments.values()).forEach(i => {
-      totalInvestedAoa += i.amount;
+    Array.from(this.deposits.values()).forEach(d => {
+      if (d.status === 'approved') totalInvestedAoa += d.amount;
     });
 
     let totalWithdrawnAoa = 0;
@@ -177,15 +177,23 @@ class InMemoryDatabase {
       if (w.status === 'paid') totalWithdrawnAoa += w.amount;
     });
 
+    let kwanzaCoinInCirculation = 0;
+    Array.from(this.wallets.values()).forEach(w => {
+      kwanzaCoinInCirculation += (w.kwanzaCoinBalance || 0);
+    });
+
+    const activeInvs = Array.from(this.investments.values()).filter(i => i.status === 'active');
+    const totalMiningHashrateGh = activeInvs.length * 12.5;
+
     return {
       totalInvestedAoa,
       totalWithdrawnAoa,
-      kwanzaCoinInCirculation: this.kcRate.totalMined,
-      totalMiningHashrateGh: 125.8,
-      activeInvestmentsCount: Array.from(this.investments.values()).filter(i => i.status === 'active').length,
+      kwanzaCoinInCirculation,
+      totalMiningHashrateGh,
+      activeInvestmentsCount: activeInvs.length,
       processedWithdrawalsCount: Array.from(this.withdrawals.values()).filter(w => w.status === 'paid').length,
       totalUsersCount: this.users.size,
-      totalInvestorsCount: this.users.size
+      totalInvestorsCount: Array.from(this.users.values()).filter(u => u.role === 'user').length
     };
   }
 }

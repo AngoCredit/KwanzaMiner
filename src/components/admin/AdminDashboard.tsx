@@ -19,30 +19,56 @@ import {
   Cpu, 
   Coins, 
   FileText, 
-  CheckCircle2, 
-  XCircle, 
-  Clock, 
-  Search, 
-  Sparkles, 
   ArrowLeft,
-  DollarSign,
-  TrendingUp,
   RefreshCw,
-  AlertTriangle,
-  Building,
   Key,
   Sliders,
   Bell
 } from 'lucide-react';
 
-export const AdminDashboard: React.FC = () => {
+interface EBState { hasError: boolean; error: string }
+class AdminErrorBoundary extends React.Component<{ children: React.ReactNode }, EBState> {
+  declare state: EBState;
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    (this as any).state = { hasError: false, error: '' } as EBState;
+  }
+  static getDerivedStateFromError(error: Error): EBState {
+    return { hasError: true, error: error?.message || String(error) };
+  }
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error('[AdminDashboard] Rendering crash:', error, info);
+  }
+  render() {
+    const { hasError, error } = (this as any).state as EBState;
+    if (hasError) {
+      return (
+        <div className="min-h-screen bg-slate-950 flex items-center justify-center p-8">
+          <div className="bg-slate-900 border border-red-800 rounded-3xl p-8 max-w-lg w-full text-center space-y-4">
+            <div className="text-red-400 text-4xl">⚠️</div>
+            <h2 className="text-white text-xl font-black">Erro no Painel Admin</h2>
+            <p className="text-slate-400 text-sm">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-6 py-2.5 bg-[#1769D1] hover:bg-blue-600 text-white font-bold rounded-xl text-sm"
+            >
+              Recarregar Painel
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return (this as any).props.children;
+  }
+}
+
+const AdminDashboardInner: React.FC = () => {
   const { 
     currentUser, 
     setCurrentRoute, 
     showToast, 
     kcRate, 
     refreshAll, 
-    stats,
     triggerConfetti
   } = useApp();
 
@@ -57,10 +83,53 @@ export const AdminDashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   // Tokenomics Form
-  const [rateInput, setRateInput] = useState<number>(kcRate.rateAoa);
-  const [treasuryInput, setTreasuryInput] = useState<number>(kcRate.treasuryBackingAoa || 76860000);
-  const [change24hInput, setChange24hInput] = useState<number>(kcRate.change24h || 3.45);
+  const totalApprovedDepositsAoa = (allDeposits || [])
+    .filter((d) => d.status === 'approved' || d.status === 'completed')
+    .reduce((acc, d) => acc + (Number(d.amount) || Number(d.amountAoa) || 0), 0);
+
+  const totalPaidWithdrawalsAoa = (allWithdrawals || [])
+    .filter((w) => w.status === 'paid' || w.status === 'approved' || w.status === 'completed')
+    .reduce((acc, w) => acc + (Number(w.amount) || Number(w.amountAoa) || 0), 0);
+
+  const realKwanzaCoinInCirculation = (allUsers || []).reduce(
+    (acc, u) => acc + (Number(u.wallet?.kwanzaCoinBalance) || Number(u.kwanzaCoinBalance) || 0),
+    0
+  );
+
+  const realHashrate = (allUsers || []).reduce(
+    (acc, u) => acc + (Number(u.wallet?.miningMultiplier ? u.wallet.miningMultiplier * 12.5 : 0) || Number(u.hashrate) || 0),
+    0
+  );
+
+  const stats = {
+    totalInvestedAoa: totalApprovedDepositsAoa,
+    activeInvestmentsCount: (allPlans || []).filter((p) => p.status === 'active' || p.active).length,
+    totalWithdrawnAoa: totalPaidWithdrawalsAoa,
+    processedWithdrawalsCount: (allWithdrawals || []).filter((w) => w.status === 'paid' || w.status === 'approved' || w.status === 'completed').length,
+    kwanzaCoinInCirculation: realKwanzaCoinInCirculation,
+    totalMiningHashrateGh: realHashrate,
+  };
+
+  const calculatedTreasury = kcRate?.treasuryBackingAoa && kcRate.treasuryBackingAoa > 0
+    ? kcRate.treasuryBackingAoa
+    : Math.max(0, totalApprovedDepositsAoa - totalPaidWithdrawalsAoa);
+
+  const [rateInput, setRateInput] = useState<number>(kcRate?.rateAoa || 100);
+  const [treasuryInput, setTreasuryInput] = useState<number>(calculatedTreasury);
+  const [change24hInput, setChange24hInput] = useState<number>(kcRate?.change24h || 0);
   const [isUpdatingRate, setIsUpdatingRate] = useState(false);
+
+  useEffect(() => {
+    if (kcRate) {
+      if (kcRate.rateAoa) setRateInput(kcRate.rateAoa);
+      if (kcRate.change24h !== undefined) setChange24hInput(kcRate.change24h);
+      if (kcRate.treasuryBackingAoa && kcRate.treasuryBackingAoa > 0) {
+        setTreasuryInput(kcRate.treasuryBackingAoa);
+      } else {
+        setTreasuryInput(calculatedTreasury);
+      }
+    }
+  }, [kcRate, calculatedTreasury]);
 
   const loadAdminData = async () => {
     setIsLoading(true);
@@ -73,16 +142,20 @@ export const AdminDashboard: React.FC = () => {
       ]);
 
       if (uRes.status === 'fulfilled' && uRes.value) {
-        setAllUsers(uRes.value);
+        const val = uRes.value;
+        setAllUsers(Array.isArray(val) ? val : (val.users || val.data || []));
       }
       if (dRes.status === 'fulfilled' && dRes.value) {
-        setAllDeposits(dRes.value);
+        const val = dRes.value;
+        setAllDeposits(Array.isArray(val) ? val : (val.deposits || val.data || []));
       }
       if (wRes.status === 'fulfilled' && wRes.value) {
-        setAllWithdrawals(wRes.value);
+        const val = wRes.value;
+        setAllWithdrawals(Array.isArray(val) ? val : (val.withdrawals || val.data || []));
       }
       if (pRes.status === 'fulfilled' && pRes.value) {
-        setAllPlans(pRes.value);
+        const val = pRes.value;
+        setAllPlans(Array.isArray(val) ? val : (val.plans || val.data || []));
       }
     } catch (err) {
       console.error('Error fetching admin data:', err);
@@ -99,7 +172,7 @@ export const AdminDashboard: React.FC = () => {
     e.preventDefault();
     setIsUpdatingRate(true);
     try {
-      await api.adminUpdateKcRate(rateInput, treasuryInput);
+      await api.adminUpdateKcRate(rateInput, treasuryInput, change24hInput);
       triggerConfetti();
       showToast(`Cotação do KwanzaCoin atualizada para ${rateInput} AOA!`, 'success');
       refreshAll();
@@ -327,7 +400,7 @@ export const AdminDashboard: React.FC = () => {
                   {stats.kwanzaCoinInCirculation.toLocaleString('pt-AO')} KC
                 </div>
                 <div className="text-[10px] text-cyan-300 font-mono">
-                  1 KC = {kcRate.rateAoa.toLocaleString('pt-AO')} AOA
+                  1 KC = {(kcRate?.rateAoa || 100).toLocaleString('pt-AO')} AOA
                 </div>
               </div>
 
@@ -524,7 +597,7 @@ export const AdminDashboard: React.FC = () => {
                   <div>
                     <div className="text-slate-400 text-[10px] font-bold uppercase">Simulação de Valor Total de Mercado</div>
                     <div className="text-lg font-black text-white">
-                      {((stats.kwanzaCoinInCirculation || 488535) * rateInput).toLocaleString('pt-AO')} AOA
+                      {(stats.kwanzaCoinInCirculation * rateInput).toLocaleString('pt-AO')} AOA
                     </div>
                   </div>
 
@@ -548,9 +621,15 @@ export const AdminDashboard: React.FC = () => {
 
         {/* SETTINGS TAB */}
         {activeAdminTab === 'settings' && (
-          <AdminSettingsTab showToast={showToast} triggerConfetti={triggerConfetti} />
+          <AdminSettingsTab />
         )}
       </main>
     </div>
   );
 };
+
+export const AdminDashboard: React.FC = () => (
+  <AdminErrorBoundary>
+    <AdminDashboardInner />
+  </AdminErrorBoundary>
+);

@@ -650,15 +650,16 @@ async function startServer() {
   });
 
   app.post('/api/admin/kwanzacoin/rate', (req, res) => {
-    const { newRateAoa, source, change24h } = req.body;
+    const { newRateAoa, treasuryBackingAoa, source, change24h } = req.body;
     if (!newRateAoa || Number(newRateAoa) <= 0) {
       return res.status(400).json({ success: false, message: 'Taxa inválida.' });
     }
 
     db.kcRate.rateAoa = Number(newRateAoa);
-    db.kcRate.effectiveFrom = new Date().toISOString();
+    if (treasuryBackingAoa !== undefined) db.kcRate.treasuryBackingAoa = Number(treasuryBackingAoa);
     if (source) db.kcRate.source = source;
     if (change24h !== undefined) db.kcRate.change24h = Number(change24h);
+    db.kcRate.effectiveFrom = new Date().toISOString();
 
     const log: AuditLog = {
       id: `aud-${Date.now()}`,
@@ -666,12 +667,11 @@ async function startServer() {
       adminEmail: 'admin@kwanzacoin.ao',
       action: 'UPDATE_KC_EXCHANGE_RATE',
       targetResource: 'KwanzaCoin Rate Engine',
-      details: `Taxa ajustada para 1 KC = ${newRateAoa} AOA`,
+      details: `Taxa ajustada para 1 KC = ${newRateAoa} AOA | Reserva Tesouro: ${db.kcRate.treasuryBackingAoa} AOA`,
       ipAddress: getClientIp(req),
       createdAt: new Date().toISOString()
     };
     db.auditLogs.unshift(log);
-
 
     supabaseSync.syncKcRate(db.kcRate);
     supabaseSync.syncAuditLog(log);

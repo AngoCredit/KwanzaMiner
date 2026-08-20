@@ -12,11 +12,13 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
  * with the user's real name, email, and avatar_url from Google.
  */
 export async function signInWithGoogle() {
+  // Determine current origin (works seamlessly on Vercel and localhost)
+  const redirectUrl = env.VITE_SITE_URL || (typeof window !== 'undefined' ? window.location.origin : undefined);
+
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      // Stay on same page — session is received via onAuthStateChange
-      redirectTo: window.location.origin,
+      redirectTo: redirectUrl,
       queryParams: {
         access_type: 'offline',
         prompt: 'select_account', // Always show Google account picker
