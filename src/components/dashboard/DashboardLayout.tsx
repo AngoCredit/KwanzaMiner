@@ -31,7 +31,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   onSelectTab, 
   children 
 }) => {
-  const { currentUser, wallet, kcRate, setCurrentRoute, logout, switchDemoAccount } = useApp();
+  const { currentUser, wallet, kcRate, setCurrentRoute, logout } = useApp();
 
   const navItems = [
     { id: 'visao-geral', label: 'Visão Geral', icon: LayoutDashboard },

@@ -21,10 +21,10 @@ export const Toast: React.FC = () => {
 
   return (
     <div className="fixed bottom-5 right-5 z-50 max-w-md w-full px-4 animate-in fade-in slide-in-from-bottom-5 duration-300">
-      <div className={`flex items-start gap-3 p-4 rounded-xl border shadow-2xl ${bgColors[toastMessage.type]}`}>
-        {icons[toastMessage.type]}
+      <div className={`flex items-start gap-3 p-4 rounded-xl border shadow-2xl ${bgColors[toastMessage.type as keyof typeof bgColors] || bgColors.info}`}>
+        {icons[toastMessage.type as keyof typeof icons] || icons.info}
         <div className="flex-1 text-xs sm:text-sm font-medium leading-relaxed">
-          {toastMessage.text}
+          {toastMessage.message}
         </div>
       </div>
     </div>

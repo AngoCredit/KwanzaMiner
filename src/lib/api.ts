@@ -48,6 +48,15 @@ export const api = {
   updateProfile: (userId: string, data: { name?: string; phone?: string; birthDate?: string }) =>
     request('POST', `/api/users/${userId}/profile`, data),
 
+  updatePhone: (userId: string, phone: string) =>
+    request('POST', '/api/user/update-phone', { userId, phone }),
+
+  updateUserProfile: (userId: string, data: { name?: string; phone?: string; birthDate?: string }) =>
+    request('POST', `/api/users/${userId}/profile`, data),
+
+  updateBankInfo: (userId: string, bankName: string, accountHolder: string, iban: string, accountNumber: string) =>
+    request('POST', `/api/users/${userId}/bank`, { bankName, accountHolder, iban, accountNumber }),
+
   // Public stats
   getPublicStats: () =>
     request('GET', '/api/stats/public'),
@@ -101,18 +110,21 @@ export const api = {
   getWithdrawals: (userId: string) =>
     request('GET', `/api/withdrawals/${userId}`),
 
-  createWithdrawal: (
-    userId: string,
-    data: {
-      amount: number;
-      bankName: string;
-      accountNumber: string;
-      iban?: string;
-      holderName: string;
-      note?: string;
+  createWithdrawal: (userId: string, dataOrAmount: any, ...rest: any[]) => {
+    if (typeof dataOrAmount === 'object') {
+      return request('POST', '/api/withdrawals/create', { userId, ...dataOrAmount });
     }
-  ) =>
-    request('POST', '/api/withdrawals/create', { userId, ...data }),
+    const [bankName, iban, holderName, accountNumber, note] = rest;
+    return request('POST', '/api/withdrawals/create', {
+      userId,
+      amount: dataOrAmount,
+      bankName,
+      iban,
+      holderName,
+      accountNumber,
+      note
+    });
+  },
 
   // KwanzaCoin
   getKcRate: () =>
@@ -139,8 +151,23 @@ export const api = {
   getKyc: (userId: string) =>
     request('GET', `/api/kyc/${userId}`),
 
-  submitKyc: (userId: string, data: object) =>
-    request('POST', '/api/kyc/submit', { userId, ...data }),
+  submitKyc: (userId: string, dataOrType: any, ...rest: any[]) => {
+    if (typeof dataOrType === 'object') {
+      return request('POST', '/api/kyc/submit', { userId, ...dataOrType });
+    }
+    const [docNumber, fullName, birthDate, province, docFrontUrl, docBackUrl, selfieUrl] = rest;
+    return request('POST', '/api/kyc/submit', {
+      userId,
+      docType: dataOrType,
+      docNumber,
+      fullName,
+      birthDate,
+      province,
+      docFrontUrl,
+      docBackUrl,
+      selfieUrl
+    });
+  },
 
   // Chat
   getChatMessages: () =>
@@ -163,19 +190,31 @@ export const api = {
   getAllWithdrawals: () =>
     request('GET', '/api/admin/withdrawals'),
 
-  adminApproveDeposit: (id: string, adminId: string, note?: string) =>
+  adminApproveDeposit: (id: string, adminId?: string, note?: string) =>
     request('POST', `/api/admin/deposits/${id}/approve`, { adminId, note }),
 
   adminRejectDeposit: (id: string, reason?: string) =>
     request('POST', `/api/admin/deposits/${id}/reject`, { reason }),
 
-  adminMarkWithdrawalPaid: (id: string, adminId: string, bankProofRef?: string, note?: string) =>
+  rejectDeposit: (id: string, reason?: string) =>
+    request('POST', `/api/admin/deposits/${id}/reject`, { reason }),
+
+  adminMarkWithdrawalPaid: (id: string, adminId?: string, bankProofRef?: string, note?: string) =>
+    request('POST', `/api/admin/withdrawals/${id}/mark-paid`, { adminId, bankProofRef, note }),
+
+  adminApproveWithdrawal: (id: string, adminId?: string, bankProofRef?: string, note?: string) =>
     request('POST', `/api/admin/withdrawals/${id}/mark-paid`, { adminId, bankProofRef, note }),
 
   adminRejectWithdrawal: (id: string, reason?: string) =>
     request('POST', `/api/admin/withdrawals/${id}/reject`, { reason }),
 
+  rejectWithdrawal: (id: string, reason?: string) =>
+    request('POST', `/api/admin/withdrawals/${id}/reject`, { reason }),
+
   adminReviewKyc: (id: string, status: string, reason?: string) =>
+    request('POST', `/api/admin/kyc/${id}/review`, { status, reason }),
+
+  adminUpdateKyc: (id: string, status: string, reason?: string) =>
     request('POST', `/api/admin/kyc/${id}/review`, { status, reason }),
 
   adminUpdateKcRate: (newRateAoa: number, treasuryBackingAoa?: number, change24h?: number) =>
@@ -184,16 +223,22 @@ export const api = {
   adminTogglePremium: (id: string) =>
     request('POST', `/api/admin/users/${id}/toggle-premium`),
 
+  toggleAdminUserPremium: (id: string) =>
+    request('POST', `/api/admin/users/${id}/toggle-premium`),
+
   adminToggleStatus: (id: string, status: string) =>
+    request('POST', `/api/admin/users/${id}/toggle-status`, { status }),
+
+  toggleAdminUserStatus: (id: string, status: string) =>
     request('POST', `/api/admin/users/${id}/toggle-status`, { status }),
 
   adminAdjustBalance: (
     id: string,
     amount: number,
-    currency: string,
-    type: string,
-    reason: string,
-    adminId: string
+    currency?: string,
+    type?: string,
+    reason?: string,
+    adminId?: string
   ) =>
     request('POST', `/api/admin/users/${id}/adjust-balance`, {
       amount,
@@ -203,10 +248,32 @@ export const api = {
       adminId,
     }),
 
-  adminUpdateRole: (id: string, role: string, adminId: string) =>
+  adminAdjustUserBalance: (
+    id: string,
+    amount: number,
+    currency?: string,
+    type?: string,
+    reason?: string,
+    adminId?: string
+  ) =>
+    request('POST', `/api/admin/users/${id}/adjust-balance`, {
+      amount,
+      currency,
+      type,
+      reason,
+      adminId,
+    }),
+
+  adminUpdateRole: (id: string, role: string, adminId?: string) =>
+    request('POST', `/api/admin/users/${id}/update-role`, { role, adminId }),
+
+  adminUpdateUserRole: (id: string, role: string, adminId?: string) =>
     request('POST', `/api/admin/users/${id}/update-role`, { role, adminId }),
 
   getAuditLogs: () =>
+    request('GET', '/api/admin/audit-logs'),
+
+  getAdminAuditLogs: () =>
     request('GET', '/api/admin/audit-logs'),
 
   getSystemSettings: () =>
@@ -221,6 +288,13 @@ export const api = {
   adminCreatePlan: (plan: object) =>
     request('POST', '/api/admin/plans', plan),
 
+  createPlan: (plan: object) =>
+    request('POST', '/api/admin/plans', plan),
+
   adminUpdatePlan: (id: string, plan: object) =>
     request('PUT', `/api/admin/plans/${id}`, plan),
+
+  updatePlan: (id: string, plan: object) =>
+    request('PUT', `/api/admin/plans/${id}`, plan),
 };
+

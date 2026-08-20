@@ -39,10 +39,10 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
       <div className="flex flex-col leading-none justify-center">
         <div className={`font-black tracking-tight flex items-center gap-1.5 ${titleSizes[size]}`}>
           <span className={mainTextColor}>KWANZA</span>
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#38C0E8] via-[#2DD4BF] to-[#45E2B8]">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500">
             COIN
           </span>
-          <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-[#0D2438] text-[#38BDF8] font-mono font-bold border border-[#1E3A5F] shadow-xs">
+          <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-amber-950/80 text-amber-300 font-mono font-bold border border-amber-700/60 shadow-xs">
             KC
           </span>
         </div>

@@ -15,6 +15,19 @@ export interface User {
   membershipLevel: 'normal' | 'premium';
   status: 'active' | 'blocked' | 'suspended';
   kycStatus: 'unverified' | 'pending' | 'in_review' | 'approved' | 'rejected';
+  kycDocumentNumber?: string;
+  bankAccount?: {
+    bankName?: string;
+    accountHolder?: string;
+    accountNumber?: string;
+    iban?: string;
+  };
+  bankDetails?: {
+    bankName?: string;
+    holderName?: string;
+    accountNumber?: string;
+    iban?: string;
+  };
   twoFactorEnabled?: boolean;
   miningBoostLevel?: number;
   miningBoostMultiplier?: number;
@@ -74,11 +87,15 @@ export interface Investment {
 export interface Deposit {
   id: string;
   userId: string;
+  userName?: string;
+  userEmail?: string;
   amount: number;
   method: string;
   phoneOrEntity?: string;
   bankAccount?: string;
+  reference?: string;
   proofDocumentUrl?: string;
+  proofFile?: string;
   status: 'pending' | 'approved' | 'rejected';
   adminNote?: string;
   approvedAt?: string;
@@ -110,6 +127,7 @@ export interface LedgerEntry {
   description: string;
   balanceBefore?: number;
   balanceAfter?: number;
+  reference?: string;
   referenceId?: string;
   createdAt: string;
 }
@@ -163,6 +181,8 @@ export interface KycRequest {
   submittedAt: string;
   reviewedAt?: string;
 }
+
+export type KycVerification = KycRequest;
 
 export interface MiningBoostTier {
   level: number;

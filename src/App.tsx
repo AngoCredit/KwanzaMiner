@@ -4,7 +4,9 @@ import { Navbar } from './components/layout/Navbar.tsx';
 import { Footer } from './components/layout/Footer.tsx';
 import { Toast } from './components/layout/Toast.tsx';
 import { AuthModal } from './components/auth/AuthModal.tsx';
+import { PhonePromptModal } from './components/auth/PhonePromptModal.tsx';
 import { CommunityChat } from './components/common/CommunityChat.tsx';
+import { api } from './lib/api.ts';
 
 
 // Public pages
@@ -35,8 +37,25 @@ import { SupportTab } from './components/dashboard/SupportTab.tsx';
 import { AdminDashboard } from './components/admin/AdminDashboard.tsx';
 
 const AppContent: React.FC = () => {
-  const { currentRoute, setCurrentRoute, currentUser, setAuthModalOpen, setAuthMode } = useApp();
+  const { currentRoute, setCurrentRoute, currentUser, setAuthModalOpen, setAuthMode, showToast, refreshAll } = useApp();
   const [dashboardTab, setDashboardTab] = useState<string>('visao-geral');
+
+  // Check if current user is missing phone number for manual verification (Google user)
+  const isMissingPhone = Boolean(
+    currentUser &&
+    currentUser.email.toLowerCase() !== 'bytekwanza@gmail.com' &&
+    currentUser.role !== 'superadmin' &&
+    (!currentUser.phone || currentUser.phone === '+244 923 000 000')
+  );
+
+  const handlePhoneSubmit = async (phone: string) => {
+    if (!currentUser) return;
+    const res = await api.updatePhone(currentUser.id, phone);
+    if (res.success && res.user) {
+      showToast('Número de telemóvel registado com sucesso! A sua conta foi enviada para validação manual.', 'success');
+      await refreshAll();
+    }
+  };
 
   // Handle route-specific dashboard tab navigation
   const handleNavigateDashboard = (tab: string) => {
@@ -51,6 +70,7 @@ const AppContent: React.FC = () => {
     return (
       <>
         <AdminDashboard />
+        <CommunityChat />
         <Toast />
         <AuthModal />
       </>
@@ -59,6 +79,12 @@ const AppContent: React.FC = () => {
 
   // Render Investor Dashboard if on /dashboard
   if (currentRoute.startsWith('/dashboard')) {
+    // If the logged in user is the admin (bytekwanza@gmail.com / superadmin), direct them to /admin exclusively
+    if (currentUser && (currentUser.role === 'superadmin' || currentUser.role === 'admin' || currentUser.email.toLowerCase() === 'bytekwanza@gmail.com')) {
+      setCurrentRoute('/admin');
+      return null;
+    }
+
     if (!currentUser) {
       return (
         <div className="min-h-screen bg-[#F4F7FA] flex flex-col justify-between">
@@ -113,8 +139,14 @@ const AppContent: React.FC = () => {
           {dashboardTab === 'suporte' && <SupportTab />}
         </DashboardLayout>
         <Footer />
+        <CommunityChat />
         <Toast />
         <AuthModal />
+        <PhonePromptModal
+          isOpen={isMissingPhone}
+          userName={currentUser?.name || ''}
+          onSubmitPhone={handlePhoneSubmit}
+        />
       </div>
     );
   }
@@ -140,6 +172,11 @@ const AppContent: React.FC = () => {
       <CommunityChat />
       <Toast />
       <AuthModal />
+      <PhonePromptModal
+        isOpen={isMissingPhone}
+        userName={currentUser?.name || ''}
+        onSubmitPhone={handlePhoneSubmit}
+      />
     </div>
   );
 };

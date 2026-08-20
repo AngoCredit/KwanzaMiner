@@ -35,18 +35,18 @@ export const LandingPage: React.FC = () => {
 
   // Simulator state
   const [simAmount, setSimAmount] = useState<number>(6000);
-  const [selectedPlanId, setSelectedPlanId] = useState<string>('plan-starter-6k');
+  const [selectedPlanId, setSelectedPlanId] = useState<string>('plan-micro');
 
   // Find selected plan for simulator
   const activePlan = plans.find(p => p.id === selectedPlanId) || plans[0] || {
-    id: 'plan-starter-6k',
-    name: 'Plano Micro-Mineração (Início)',
+    id: 'plan-micro',
+    name: 'Starter Mineração AOA',
     minimumAmount: 6000,
     maximumAmount: 50000,
-    durationDays: 15,
-    returnRatePercent: 18,
-    dailyRatePercent: 1.2,
-    miningRatePerHour: 0.08,
+    durationDays: 30,
+    returnRatePercent: 25,
+    dailyRatePercent: 0.833,
+    miningRatePerHour: 0.15,
     kwanzaCoinRatePercent: 5
   };
 
@@ -355,7 +355,7 @@ export const LandingPage: React.FC = () => {
 
                 {/* Quick select buttons */}
                 <div className="flex flex-wrap gap-2">
-                  {[6000, 20000, 50000, 100000, 250000, 500000].map((amt) => (
+                  {[6000, 50000, 250000, 1000000, 5000000].map((amt) => (
                     <button
                       key={amt}
                       onClick={() => {

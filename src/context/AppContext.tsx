@@ -8,6 +8,7 @@ import React, {
 } from 'react';
 import confetti from 'canvas-confetti';
 import { api } from '../lib/api.ts';
+import { supabase, signInWithGoogle } from '../lib/supabaseClient.ts';
 import type {
   User,
   Wallet,
@@ -35,7 +36,7 @@ interface AppContextValue {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, phone: string, birthDate: string, password?: string) => Promise<void>;
-  loginWithGoogle: (data: { email: string; name: string; birthDate?: string; avatar?: string }) => Promise<void>;
+  loginWithGoogle: (data?: { email: string; name: string; birthDate?: string; avatar?: string }) => Promise<void>;
   logout: () => void;
   switchDemoAccount: () => void;
 
@@ -299,18 +300,68 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   );
 
   const loginWithGoogle = useCallback(
-    async (data: { email: string; name: string; birthDate?: string; avatar?: string }) => {
+    async (data?: { email: string; name: string; birthDate?: string; avatar?: string }) => {
+      // If data is provided, use it directly (manual Google form fallback)
+      if (data) {
+        setIsLoading(true);
+        try {
+          const res = await api.loginWithGoogle(data);
+          afterLogin(res.user, res.wallet);
+          showToast(`Autenticado com Google! Bem-vindo, ${res.user.name.split(' ')[0]}!`, 'success');
+        } finally {
+          setIsLoading(false);
+        }
+        return;
+      }
+
+      // Real Google OAuth via Supabase — opens the Google account picker popup/redirect
       setIsLoading(true);
       try {
-        const res = await api.loginWithGoogle(data);
-        afterLogin(res.user, res.wallet);
-        showToast(`Autenticado com Google! Bem-vindo, ${res.user.name.split(' ')[0]}!`, 'success');
-      } finally {
+        await signInWithGoogle();
+      } catch (err: any) {
         setIsLoading(false);
+        const msg = err?.message || String(err);
+        if (msg.includes('provider is not enabled') || msg.includes('Unsupported provider')) {
+          throw new Error('O provedor Google ainda não foi ativado no Supabase Dashboard (Authentication -> Providers -> Google). Por favor ative o Google Provider no Supabase ou registe-se por Email abaixo.');
+        }
+        throw new Error(msg || 'Erro ao iniciar autenticação com Google.');
       }
     },
     [afterLogin, showToast]
   );
+
+  // Listen for Supabase OAuth session (Google redirect / popup callback)
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
+        const sbUser = session.user;
+        const googleEmail = sbUser.email || '';
+        const googleName = sbUser.user_metadata?.full_name || sbUser.user_metadata?.name || googleEmail.split('@')[0];
+        const googleAvatar = sbUser.user_metadata?.avatar_url || sbUser.user_metadata?.picture || '';
+
+        // Skip if already logged in with this email
+        if (currentUser && currentUser.email === googleEmail) return;
+
+        try {
+          setIsLoading(true);
+          const res = await api.loginWithGoogle({
+            email: googleEmail,
+            name: googleName,
+            birthDate: '1995-01-01',
+            avatar: googleAvatar,
+          });
+          afterLogin(res.user, res.wallet);
+          showToast(`Bem-vindo, ${res.user.name.split(' ')[0]}! ✓ Sessão Google ativa`, 'success');
+        } catch (err) {
+          // Silent — user may have already logged in via email before
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [afterLogin, showToast]);
 
   const logout = useCallback(() => {
     setCurrentUser(null);

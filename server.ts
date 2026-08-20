@@ -70,8 +70,35 @@ async function startServer() {
 
     let user = Array.from(db.users.values()).find(u => u.email.toLowerCase() === email.toLowerCase());
     if (!user) {
-      // Check if it's admin or create user
-      return res.status(401).json({ success: false, message: 'Credenciais inválidas ou utilizador não encontrado.' });
+      // Auto-create superadmin if bytekwanza@gmail.com is logging in
+      if (email.toLowerCase() === 'bytekwanza@gmail.com') {
+        const superAdmin: User = {
+          id: 'usr-admin-001',
+          name: 'Kwanza Admin',
+          email: 'bytekwanza@gmail.com',
+          phone: '+244 923 000 000',
+          birthDate: '1990-01-01',
+          age: 36,
+          authProvider: 'email',
+          role: 'superadmin',
+          membershipLevel: 'premium',
+          status: 'active',
+          kycStatus: 'approved',
+          twoFactorEnabled: true,
+          createdAt: new Date().toISOString(),
+          lastLogin: new Date().toISOString()
+        };
+        db.users.set(superAdmin.id, superAdmin);
+        user = superAdmin;
+      } else {
+        return res.status(401).json({ success: false, message: 'Credenciais inválidas ou utilizador não encontrado.' });
+      }
+    }
+
+    if (email.toLowerCase() === 'bytekwanza@gmail.com') {
+      user.role = 'superadmin';
+      user.membershipLevel = 'premium';
+      user.kycStatus = 'approved';
     }
 
     if (user.status === 'blocked') {
@@ -279,6 +306,16 @@ async function startServer() {
   });
 
   // Update profile
+  app.post('/api/user/update-phone', (req, res) => {
+    const { userId, phone } = req.body;
+    const user = db.users.get(userId);
+    if (!user) return res.status(404).json({ success: false, message: 'Utilizador não encontrado.' });
+    user.phone = phone;
+    user.kycStatus = 'pending'; // Flagged for manual validation
+    supabaseSync.syncUser(user);
+    res.json({ success: true, user });
+  });
+
   app.post('/api/users/:userId/profile', (req, res) => {
     const { userId } = req.params;
     const { name, phone, birthDate } = req.body;
@@ -806,15 +843,15 @@ async function startServer() {
   // 11. NOTIFICATIONS
   app.get('/api/notifications/:userId', (req, res) => {
     const { userId } = req.params;
-    const notifs = db.notifications.filter(n => n.userId === userId);
+    const notifs = db.notifications.filter(n => !(n as any).userId || (n as any).userId === userId);
     res.json({ success: true, notifications: notifs });
   });
 
   app.post('/api/notifications/mark-all-read', (req, res) => {
     const { userId } = req.body;
     for (const n of db.notifications) {
-      if (n.userId === userId) {
-        n.read = true;
+      if (!(n as any).userId || (n as any).userId === userId) {
+        (n as any).read = true;
       }
     }
     res.json({ success: true });
