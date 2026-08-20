@@ -102,8 +102,8 @@ function getClientUser(email: string, name?: string, phone?: string, birthDate?:
 
   const wallet = {
     userId,
-    totalBalance: 10000,
-    availableBalance: 10000,
+    totalBalance: 0,
+    availableBalance: 0,
     investedBalance: 0,
     accumulatedProfit: 0,
     kwanzaCoinBalance: 0,
@@ -330,8 +330,8 @@ export const api = {
         success: true,
         wallet: {
           userId,
-          totalBalance: 10000,
-          availableBalance: 10000,
+          totalBalance: 0,
+          availableBalance: 0,
           investedBalance: 0,
           accumulatedProfit: 0,
           kwanzaCoinBalance: 0,
