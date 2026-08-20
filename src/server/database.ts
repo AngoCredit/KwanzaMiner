@@ -24,6 +24,7 @@ class InMemoryDatabase {
   ledger: LedgerEntry[] = [];
   kycRequests = new Map<string, KycRequest>();
   chatMessages: ChatMessage[] = [];
+  notifications: Notification[] = [];
   auditLogs: AuditLog[] = [];
 
   kcRate: KcRate = {
