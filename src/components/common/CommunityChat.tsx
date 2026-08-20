@@ -92,41 +92,90 @@ export const CommunityChat: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Image Handling (Max 2MB)
+  // Image Handling (Auto-Compressed canvas to ~50KB)
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) {
-      showToast('A imagem excede o limite máximo permitido de 2MB.', 'error');
+    if (file.size > 8 * 1024 * 1024) {
+      showToast('A imagem excede o limite máximo permitido de 8MB.', 'error');
       return;
     }
 
     const reader = new FileReader();
-    reader.onload = () => {
-      setSelectedImage(reader.result as string);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 800;
+        const MAX_HEIGHT = 800;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height = Math.round((height * MAX_WIDTH) / width);
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width = Math.round((width * MAX_HEIGHT) / height);
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+          setSelectedImage(compressedDataUrl);
+        } else {
+          setSelectedImage(event.target?.result as string);
+        }
+      };
+      img.onerror = () => {
+        setSelectedImage(event.target?.result as string);
+      };
+      img.src = event.target?.result as string;
     };
     reader.readAsDataURL(file);
   };
 
-  // Audio Recording (Max 1MB ~ 60s)
+  // Audio Recording (Cross-browser compatible MIME type detection)
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       audioChunksRef.current = [];
-      const mediaRecorder = new MediaRecorder(stream);
+
+      const mimeTypes = [
+        'audio/webm;codecs=opus',
+        'audio/webm',
+        'audio/mp4',
+        'audio/aac',
+        'audio/ogg'
+      ];
+      const selectedMime = mimeTypes.find(type => typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(type)) || '';
+
+      const mediaRecorder = selectedMime 
+        ? new MediaRecorder(stream, { mimeType: selectedMime })
+        : new MediaRecorder(stream);
+        
       mediaRecorderRef.current = mediaRecorder;
 
       mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
+        if (event.data && event.data.size > 0) {
           audioChunksRef.current.push(event.data);
         }
       };
 
       mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        if (audioBlob.size > 1 * 1024 * 1024) {
-          showToast('O áudio gravado excede o limite máximo permitido de 1MB.', 'error');
+        const typeToUse = selectedMime || 'audio/mp4';
+        const audioBlob = new Blob(audioChunksRef.current, { type: typeToUse });
+        
+        if (audioBlob.size > 3 * 1024 * 1024) {
+          showToast('O áudio gravado excede o limite máximo permitido de 3MB.', 'error');
           setRecordedAudio(null);
         } else {
           const reader = new FileReader();

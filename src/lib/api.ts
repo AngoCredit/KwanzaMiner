@@ -629,58 +629,71 @@ export const api = {
     message: string,
     options?: { imageUrl?: string; audioUrl?: string; isDirectAdmin?: boolean }
   ) => {
-    try {
-      return await request('POST', '/api/chat/send', { userId, message, ...options });
-    } catch {
-      let userName = 'Investidor';
-      let userRole = 'user';
+    let userName = 'Investidor';
+    let userRole = 'user';
 
-      if (userId === 'usr-admin-001') {
-        userName = 'Kwanza Admin';
-        userRole = 'superadmin';
-      } else if (typeof localStorage !== 'undefined') {
-        try {
-          for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && key.startsWith('kwz_user_store_')) {
-              const u = JSON.parse(localStorage.getItem(key) || '{}');
-              if (u?.user?.id === userId) {
-                userName = u.user.name || userName;
-                userRole = u.user.role || userRole;
-                break;
-              }
+    if (userId === 'usr-admin-001') {
+      userName = 'Kwanza Admin';
+      userRole = 'superadmin';
+    } else if (typeof localStorage !== 'undefined') {
+      try {
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith('kwz_user_store_')) {
+            const u = JSON.parse(localStorage.getItem(key) || '{}');
+            if (u?.user?.id === userId) {
+              userName = u.user.name || userName;
+              userRole = u.user.role || userRole;
+              break;
             }
           }
-        } catch {}
-      }
-
-      const newMsg = {
-        id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-        userId,
-        userName,
-        userRole,
-        message,
-        imageUrl: options?.imageUrl,
-        audioUrl: options?.audioUrl,
-        isDirectAdmin: options?.isDirectAdmin || false,
-        createdAt: new Date().toISOString(),
-      };
-
-      if (typeof localStorage !== 'undefined') {
-        try {
-          const stored = localStorage.getItem('kwz_chat_messages');
-          const list = stored ? JSON.parse(stored) : [];
-          list.push(newMsg);
-          localStorage.setItem('kwz_chat_messages', JSON.stringify(list));
-        } catch {}
-      }
-
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('new_chat_message', { detail: newMsg }));
-      }
-
-      return { success: true, message: newMsg };
+        }
+      } catch {}
     }
+
+    const newMsg = {
+      id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      userId,
+      userName,
+      userRole,
+      message,
+      imageUrl: options?.imageUrl,
+      audioUrl: options?.audioUrl,
+      isDirectAdmin: options?.isDirectAdmin || false,
+      createdAt: new Date().toISOString(),
+    };
+
+    try {
+      const res = await request('POST', '/api/chat/send', { userId, message, ...options });
+      if (res && res.success !== false) {
+        return res;
+      }
+    } catch {
+      // Backend not running (Vercel static host) – proceed with client-side state & storage
+    }
+
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('kwz_chat_messages');
+        let list = stored ? JSON.parse(stored) : [];
+        if (!Array.isArray(list)) list = [];
+        list.push(newMsg);
+
+        // Keep last 25 messages to fit well within localStorage limits
+        if (list.length > 25) {
+          list = list.slice(list.length - 25);
+        }
+        localStorage.setItem('kwz_chat_messages', JSON.stringify(list));
+      } catch (e) {
+        console.warn('Chat storage quota exception (handled):', e);
+      }
+    }
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('new_chat_message', { detail: newMsg }));
+    }
+
+    return { success: true, message: newMsg };
   },
 
   // ── Admin ──────────────────────────────────────────────────
