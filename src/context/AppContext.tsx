@@ -60,21 +60,22 @@ interface AppContextValue {
 
 // ─── Defaults ────────────────────────────────────────────────────────────────
 const defaultKcRate: KcRate = {
-  rateAoa: 157.5,
-  totalMined: 488535,
-  treasuryBackingAoa: 76860000,
-  change24h: 3.45,
+  rateAoa: 100.0,
+  totalMined: 0,
+  treasuryBackingAoa: 0,
+  change24h: 0.0,
   source: 'KwanzaMiner Engine',
 };
 
 const defaultStats: Stats = {
   totalInvestedAoa: 0,
   totalWithdrawnAoa: 0,
-  kwanzaCoinInCirculation: 488535,
+  kwanzaCoinInCirculation: 0,
   totalMiningHashrateGh: 0,
   activeInvestmentsCount: 0,
   processedWithdrawalsCount: 0,
   totalUsersCount: 0,
+  totalInvestorsCount: 0,
 };
 
 // ─── Context ─────────────────────────────────────────────────────────────────

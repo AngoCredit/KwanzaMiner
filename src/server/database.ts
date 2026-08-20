@@ -28,10 +28,10 @@ class InMemoryDatabase {
   auditLogs: AuditLog[] = [];
 
   kcRate: KcRate = {
-    rateAoa: 157.5,
-    totalMined: 488535,
-    treasuryBackingAoa: 76860000,
-    change24h: 3.45,
+    rateAoa: 100.0,
+    totalMined: 0,
+    treasuryBackingAoa: 0,
+    change24h: 0.0,
     source: 'KwanzaMiner Market Algorithm',
     effectiveFrom: new Date().toISOString()
   };
@@ -134,14 +134,14 @@ class InMemoryDatabase {
 
     const adminWallet: Wallet = {
       userId: superAdmin.id,
-      totalBalance: 1500000,
-      availableBalance: 1000000,
-      investedBalance: 500000,
-      accumulatedProfit: 150000,
-      kwanzaCoinBalance: 2500,
+      totalBalance: 0,
+      availableBalance: 0,
+      investedBalance: 0,
+      accumulatedProfit: 0,
+      kwanzaCoinBalance: 0,
       lockedBalance: 0,
-      miningBoostLevel: 3,
-      miningMultiplier: 2.5,
+      miningBoostLevel: 1,
+      miningMultiplier: 1.0,
       updatedAt: new Date().toISOString()
     };
 

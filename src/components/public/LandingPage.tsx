@@ -161,7 +161,7 @@ export const LandingPage: React.FC = () => {
                       Saldo Total em Activos
                     </div>
                     <div className="text-2xl sm:text-3xl font-black text-white mt-1">
-                      {wallet ? wallet.totalBalance.toLocaleString('pt-AO', { minimumFractionDigits: 2 }) : '38.450,00'}{' '}
+                      {wallet ? wallet.totalBalance.toLocaleString('pt-AO', { minimumFractionDigits: 2 }) : '0,00'}{' '}
                       <span className="text-sm font-semibold text-slate-400">AOA</span>
                     </div>
                     <div className="text-xs text-emerald-400 font-medium mt-1 flex items-center gap-1">
@@ -175,21 +175,21 @@ export const LandingPage: React.FC = () => {
                     <div className="p-3 rounded-lg bg-slate-800/60 border border-slate-700/60">
                       <div className="text-[10px] text-slate-400 font-semibold uppercase">KwanzaCoin</div>
                       <div className="text-sm sm:text-base font-black text-amber-400 mt-0.5">
-                        {wallet ? wallet.kwanzaCoinBalance.toFixed(2) : '142,50'} <span className="text-[10px]">KC</span>
+                        {wallet ? wallet.kwanzaCoinBalance.toFixed(2) : '0,00'} <span className="text-[10px]">KC</span>
                       </div>
                     </div>
 
                     <div className="p-3 rounded-lg bg-slate-800/60 border border-slate-700/60">
                       <div className="text-[10px] text-slate-400 font-semibold uppercase">Invest. Activo</div>
                       <div className="text-sm sm:text-base font-black text-cyan-300 mt-0.5">
-                        {wallet ? wallet.investedBalance.toLocaleString('pt-AO') : '26.000'} <span className="text-[10px]">AOA</span>
+                        {wallet ? wallet.investedBalance.toLocaleString('pt-AO') : '0'} <span className="text-[10px]">AOA</span>
                       </div>
                     </div>
 
                     <div className="p-3 rounded-lg bg-slate-800/60 border border-slate-700/60">
                       <div className="text-[10px] text-slate-400 font-semibold uppercase">Ganhos Acum.</div>
                       <div className="text-sm sm:text-base font-black text-emerald-400 mt-0.5">
-                        {wallet ? wallet.accumulatedProfit.toLocaleString('pt-AO') : '8.320'} <span className="text-[10px]">AOA</span>
+                        {wallet ? wallet.accumulatedProfit.toLocaleString('pt-AO') : '0'} <span className="text-[10px]">AOA</span>
                       </div>
                     </div>
                   </div>
