@@ -131,6 +131,7 @@ export interface Stats {
   activeInvestmentsCount: number;
   processedWithdrawalsCount: number;
   totalUsersCount?: number;
+  totalInvestorsCount?: number;
 }
 
 export interface Notification {

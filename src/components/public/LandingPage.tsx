@@ -237,7 +237,7 @@ export const LandingPage: React.FC = () => {
             <div className="bg-[#F4F7FA] p-4 rounded-xl border border-slate-200 text-center hover:shadow-md transition-shadow">
               <div className="text-xs font-semibold text-slate-500 uppercase">Investidores</div>
               <div className="text-lg sm:text-xl font-black text-[#1769D1] mt-1">
-                {stats.totalInvestorsCount.toLocaleString('pt-AO')}
+                {(stats.totalInvestorsCount || stats.totalUsersCount || 0).toLocaleString('pt-AO')}
               </div>
             </div>
 

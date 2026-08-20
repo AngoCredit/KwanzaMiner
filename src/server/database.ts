@@ -167,7 +167,8 @@ class InMemoryDatabase {
       totalMiningHashrateGh: 125.8,
       activeInvestmentsCount: Array.from(this.investments.values()).filter(i => i.status === 'active').length,
       processedWithdrawalsCount: Array.from(this.withdrawals.values()).filter(w => w.status === 'paid').length,
-      totalUsersCount: this.users.size
+      totalUsersCount: this.users.size,
+      totalInvestorsCount: this.users.size
     };
   }
 }
