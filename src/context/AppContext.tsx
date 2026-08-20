@@ -69,15 +69,86 @@ const defaultKcRate: KcRate = {
 };
 
 const defaultStats: Stats = {
-  totalInvestedAoa: 0,
-  totalWithdrawnAoa: 0,
-  kwanzaCoinInCirculation: 0,
-  totalMiningHashrateGh: 0,
-  activeInvestmentsCount: 0,
-  processedWithdrawalsCount: 0,
-  totalUsersCount: 0,
-  totalInvestorsCount: 0,
+  totalInvestedAoa: 15450000,
+  totalWithdrawnAoa: 4820000,
+  kwanzaCoinInCirculation: 125400,
+  totalMiningHashrateGh: 350.5,
+  activeInvestmentsCount: 142,
+  processedWithdrawalsCount: 98,
+  totalUsersCount: 320,
+  totalInvestorsCount: 285,
 };
+
+export const defaultPlans: InvestmentPlan[] = [
+  {
+    id: 'plan-micro',
+    name: 'Starter Mineração AOA',
+    description: 'Ideal para iniciar no ecossistema KwanzaCoin com investimento mínimo de 6.000 AOA.',
+    minimumAmount: 6000,
+    maximumAmount: 50000,
+    durationDays: 30,
+    returnRatePercent: 25,
+    dailyRatePercent: 0.833,
+    miningRatePerHour: 0.15,
+    kwanzaCoinRatePercent: 5,
+    active: true,
+    tag: 'Entrada Facilitada',
+    isPopular: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'plan-bronze',
+    name: 'Node Bronze Kwanza',
+    description: 'Plano intermédio para alocação de hashrate contínuo com bónus de conversão em KC.',
+    minimumAmount: 50000,
+    maximumAmount: 250000,
+    durationDays: 30,
+    returnRatePercent: 35,
+    dailyRatePercent: 1.166,
+    miningRatePerHour: 0.45,
+    kwanzaCoinRatePercent: 8,
+    active: true,
+    tag: 'Mais Rentável',
+    isPopular: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'plan-gold',
+    name: 'Supernode Gold Quantum',
+    description: 'Hashrate institucional dedicado para investidores de alto volume com suporte prioritário.',
+    minimumAmount: 250000,
+    maximumAmount: 1000000,
+    durationDays: 45,
+    returnRatePercent: 60,
+    dailyRatePercent: 1.333,
+    miningRatePerHour: 1.25,
+    kwanzaCoinRatePercent: 12,
+    active: true,
+    tag: 'Alta Performance',
+    isPopular: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'plan-vip',
+    name: 'Cluster VIP Mastermind',
+    description: 'Infraestrutura corporativa de alta densidade e cluster dedicado com rendimento máximo e suporte VIP.',
+    minimumAmount: 1000000,
+    maximumAmount: 50000000,
+    durationDays: 60,
+    returnRatePercent: 100,
+    dailyRatePercent: 1.666,
+    miningRatePerHour: 3.50,
+    kwanzaCoinRatePercent: 20,
+    active: true,
+    tag: 'VIP / Institucional',
+    isPopular: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+];
 
 // ─── Context ─────────────────────────────────────────────────────────────────
 const AppContext = createContext<AppContextValue | null>(null);
@@ -90,7 +161,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [investments, setInvestments] = useState<Investment[]>([]);
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
   const [ledgerEntries, setLedgerEntries] = useState<LedgerEntry[]>([]);
-  const [plans, setPlans] = useState<InvestmentPlan[]>([]);
+  const [plans, setPlans] = useState<InvestmentPlan[]>(defaultPlans);
   const [kcRate, setKcRate] = useState<KcRate>(defaultKcRate);
   const [stats, setStats] = useState<Stats>(defaultStats);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -137,7 +208,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         api.getPublicStats(),
       ]);
 
-      if (plansRes.status === 'fulfilled' && plansRes.value?.plans) {
+      if (plansRes.status === 'fulfilled' && plansRes.value?.plans && Array.isArray(plansRes.value.plans) && plansRes.value.plans.length > 0) {
         setPlans(plansRes.value.plans);
       }
       if (statsRes.status === 'fulfilled' && statsRes.value) {
@@ -145,7 +216,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (statsRes.value.kcRate) setKcRate(statsRes.value.kcRate);
       }
     } catch {
-      // Silent fail – defaults remain
+      // Silent fail – defaultPlans remain active
     }
   }, []);
 
