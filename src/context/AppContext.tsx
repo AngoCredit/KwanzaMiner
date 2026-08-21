@@ -69,14 +69,14 @@ const defaultKcRate: KcRate = {
 };
 
 const defaultStats: Stats = {
-  totalInvestedAoa: 15450000,
-  totalWithdrawnAoa: 4820000,
-  kwanzaCoinInCirculation: 125400,
-  totalMiningHashrateGh: 350.5,
-  activeInvestmentsCount: 142,
-  processedWithdrawalsCount: 98,
-  totalUsersCount: 320,
-  totalInvestorsCount: 285,
+  totalInvestedAoa: 0,
+  totalWithdrawnAoa: 0,
+  kwanzaCoinInCirculation: 0,
+  totalMiningHashrateGh: 0,
+  activeInvestmentsCount: 0,
+  processedWithdrawalsCount: 0,
+  totalUsersCount: 0,
+  totalInvestorsCount: 0,
 };
 
 export const defaultPlans: InvestmentPlan[] = [
