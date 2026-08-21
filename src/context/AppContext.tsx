@@ -36,8 +36,8 @@ interface AppContextValue {
   setAuthMode: (mode: 'login' | 'register') => void;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, phone: string, birthDate: string, password?: string) => Promise<void>;
-  loginWithGoogle: (data?: { email: string; name: string; birthDate?: string; avatar?: string }) => Promise<void>;
+  register: (name: string, email: string, phone: string, birthDate: string, password?: string, referralCode?: string) => Promise<void>;
+  loginWithGoogle: (dataOrReferral?: any) => Promise<void>;
   logout: () => void;
   switchDemoAccount: () => void;
 
@@ -381,10 +381,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   );
 
   const register = useCallback(
-    async (name: string, email: string, phone: string, birthDate: string, password?: string) => {
+    async (name: string, email: string, phone: string, birthDate: string, password?: string, referralCode?: string) => {
       setIsLoading(true);
       try {
-        const res = await api.register(name, email, phone, birthDate, password);
+        const res = await api.register(name, email, phone, birthDate, password, referralCode);
         afterLogin(res.user, res.wallet);
         showToast(`Conta criada com sucesso! Bem-vindo, ${res.user.name.split(' ')[0]}!`, 'success');
         triggerConfetti();
@@ -396,12 +396,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   );
 
   const loginWithGoogle = useCallback(
-    async (data?: { email: string; name: string; birthDate?: string; avatar?: string }) => {
-      // If data is provided, use it directly (manual Google form fallback)
-      if (data) {
+    async (dataOrReferral?: any) => {
+      if (dataOrReferral && typeof dataOrReferral === 'object' && dataOrReferral.email) {
         setIsLoading(true);
         try {
-          const res = await api.loginWithGoogle(data);
+          const res = await api.loginWithGoogle(dataOrReferral);
           afterLogin(res.user, res.wallet);
           showToast(`Autenticado com Google! Bem-vindo, ${res.user.name.split(' ')[0]}!`, 'success');
         } finally {

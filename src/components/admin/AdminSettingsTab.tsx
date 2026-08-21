@@ -24,6 +24,8 @@ export const AdminSettingsTab: React.FC = () => {
     investmentEnabled: true,
     minDepositAoa: 6000,
     minWithdrawalAoa: 5000,
+    referralEnabled: true,
+    referralCommissionPercent: 1.0,
     announcementMessage: 'Bem-vindo à plataforma KwanzaCoin! Os depósitos e mineração operam normalmente 24/7.',
     announcementActive: true,
   });
@@ -115,6 +117,7 @@ export const AdminSettingsTab: React.FC = () => {
               { key: 'depositEnabled', title: 'Depósitos de Saldos', desc: 'Permite que os utilizadores façam carregamentos via Multicaixa' },
               { key: 'withdrawalEnabled', title: 'Levantamentos para Conta Bancária', desc: 'Permite a solicitação de levantamento em Kwanza' },
               { key: 'investmentEnabled', title: 'Novas Subscrições de Planos', desc: 'Permite a ativação de novos pacotes de mineração' },
+              { key: 'referralEnabled', title: 'Sistema de Afiliados e Indicação', desc: 'Ativa comissões automáticas para quem indicar novos investidores' },
               { key: 'maintenanceMode', title: 'Modo de Manutenção Geral', desc: 'Bloqueia operações de utilizadores para atualização do sistema' },
             ].map((item) => {
               const val = (settings as any)[item.key];
@@ -139,8 +142,8 @@ export const AdminSettingsTab: React.FC = () => {
               );
             })}
 
-            {/* Limits */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+            {/* Limits & Referral Commission Rate */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
                   Depósito Mínimo (AOA)
@@ -164,6 +167,21 @@ export const AdminSettingsTab: React.FC = () => {
                   value={settings.minWithdrawalAoa}
                   onChange={(e) => setSettings({ ...settings, minWithdrawalAoa: Number(e.target.value) })}
                   className="w-full px-3 py-2 text-sm font-bold bg-slate-50 border border-slate-300 rounded-xl"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                  Comissão Afiliados (%)
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min={0}
+                  max={50}
+                  value={settings.referralCommissionPercent}
+                  onChange={(e) => setSettings({ ...settings, referralCommissionPercent: Number(e.target.value) })}
+                  className="w-full px-3 py-2 text-sm font-bold bg-slate-50 border border-slate-300 rounded-xl text-emerald-700"
                 />
               </div>
             </div>

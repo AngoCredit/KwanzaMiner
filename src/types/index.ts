@@ -31,6 +31,10 @@ export interface User {
   twoFactorEnabled?: boolean;
   miningBoostLevel?: number;
   miningBoostMultiplier?: number;
+  referralCode?: string;
+  referredBy?: string;
+  referralEarningsAoa?: number;
+  referralsCount?: number;
   createdAt: string;
   lastLogin?: string;
 }
@@ -200,8 +204,23 @@ export interface SystemSettings {
   investmentEnabled: boolean;
   minDepositAoa: number;
   minWithdrawalAoa: number;
+  referralEnabled?: boolean;
+  referralCommissionPercent?: number;
   announcementMessage?: string;
   announcementActive?: boolean;
+}
+
+export interface ReferralRecord {
+  id: string;
+  referrerId: string;
+  referredUserId: string;
+  referredUserName: string;
+  referredUserEmail: string;
+  investmentId: string;
+  planName: string;
+  investmentAmount: number;
+  commissionAmount: number;
+  createdAt: string;
 }
 
 export interface ChatMessage {

@@ -117,7 +117,7 @@ async function startServer() {
   });
 
   app.post('/api/auth/register', (req, res) => {
-    const { name, email, phone, birthDate, password } = req.body;
+    const { name, email, phone, birthDate, password, referralCode } = req.body;
     if (!name || !email || !phone) {
       return res.status(400).json({ success: false, message: 'Todos os campos são obrigatórios.' });
     }
@@ -150,9 +150,20 @@ async function startServer() {
       return res.status(400).json({ success: false, message: 'Já existe uma conta registada com este email.' });
     }
 
+    let referredByUserId: string | undefined = undefined;
+    if (referralCode) {
+      const cleanRef = referralCode.trim().toUpperCase();
+      const referrer = Array.from(db.users.values()).find(u => u.referralCode?.toUpperCase() === cleanRef || u.id.toUpperCase() === cleanRef);
+      if (referrer) {
+        referredByUserId = referrer.id;
+        referrer.referralsCount = (referrer.referralsCount || 0) + 1;
+      }
+    }
+
     const isSoleAdmin = email.toLowerCase() === 'bytekwanza@gmail.com';
+    const newUserId = `usr-${Date.now()}`;
     const newUser: User = {
-      id: `usr-${Date.now()}`,
+      id: newUserId,
       name,
       email: email.toLowerCase(),
       phone,
@@ -164,6 +175,10 @@ async function startServer() {
       status: 'active',
       kycStatus: isSoleAdmin ? 'approved' : 'unverified',
       twoFactorEnabled: false,
+      referralCode: `KWZ-${Math.random().toString(36).substring(2, 7).toUpperCase()}`,
+      referredBy: referredByUserId,
+      referralEarningsAoa: 0,
+      referralsCount: 0,
       createdAt: new Date().toISOString(),
       lastLogin: new Date().toISOString()
     };
@@ -195,7 +210,7 @@ async function startServer() {
 
   // Google Authentication (Login or Register)
   app.post('/api/auth/google', (req, res) => {
-    const { email, name, avatar, googleId, birthDate, phone } = req.body;
+    const { email, name, avatar, googleId, birthDate, phone, referralCode } = req.body;
     if (!email) {
       return res.status(400).json({ success: false, message: 'Email da conta Google não fornecido.' });
     }
@@ -209,6 +224,9 @@ async function startServer() {
       }
       user.lastLogin = new Date().toISOString();
       if (avatar && !user.avatar) user.avatar = avatar;
+      if (!user.referralCode) {
+        user.referralCode = `KWZ-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+      }
 
       // Sole Superadmin Promotion
       if (email.toLowerCase() === 'bytekwanza@gmail.com') {
@@ -261,6 +279,16 @@ async function startServer() {
       if (m < 0 || (m === 0 && new Date().getDate() < bDate.getDate())) age--;
     }
 
+    let referredByUserId: string | undefined = undefined;
+    if (referralCode) {
+      const cleanRef = referralCode.trim().toUpperCase();
+      const referrer = Array.from(db.users.values()).find(u => u.referralCode?.toUpperCase() === cleanRef || u.id.toUpperCase() === cleanRef);
+      if (referrer) {
+        referredByUserId = referrer.id;
+        referrer.referralsCount = (referrer.referralsCount || 0) + 1;
+      }
+    }
+
     const isSoleAdmin = email.toLowerCase() === 'bytekwanza@gmail.com';
     const newUser: User = {
       id: `usr-${Date.now()}`,
@@ -276,6 +304,10 @@ async function startServer() {
       status: 'active',
       kycStatus: isSoleAdmin ? 'approved' : 'unverified',
       twoFactorEnabled: false,
+      referralCode: `KWZ-${Math.random().toString(36).substring(2, 7).toUpperCase()}`,
+      referredBy: referredByUserId,
+      referralEarningsAoa: 0,
+      referralsCount: 0,
       createdAt: new Date().toISOString(),
       lastLogin: new Date().toISOString()
     };
@@ -302,6 +334,43 @@ async function startServer() {
       user: newUser,
       wallet: db.wallets.get(newUser.id),
       token: `kwz-google-${newUser.id}-${Date.now()}`
+    });
+  });
+
+  // GET /api/referrals/:userId
+  app.get('/api/referrals/:userId', (req, res) => {
+    const { userId } = req.params;
+    const user = db.users.get(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Utilizador não encontrado.' });
+    }
+
+    if (!user.referralCode) {
+      user.referralCode = `KWZ-${user.id.slice(-5).toUpperCase()}`;
+      db.users.set(user.id, user);
+    }
+
+    const referredUsers = Array.from(db.users.values())
+      .filter(u => u.referredBy === userId)
+      .map(u => ({
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        createdAt: u.createdAt,
+        hasInvested: Array.from(db.investments.values()).some(i => i.userId === u.id && i.status === 'active')
+      }));
+
+    const records = db.referralRecords.filter(r => r.referrerId === userId);
+
+    res.json({
+      success: true,
+      referralCode: user.referralCode,
+      referralEarningsAoa: user.referralEarningsAoa || 0,
+      referralsCount: referredUsers.length,
+      commissionPercent: db.systemSettings.referralCommissionPercent || 1.0,
+      referralEnabled: db.systemSettings.referralEnabled !== false,
+      referredUsers,
+      records
     });
   });
 

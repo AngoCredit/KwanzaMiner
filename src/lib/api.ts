@@ -135,16 +135,16 @@ export const api = {
     }
   },
 
-  register: async (name: string, email: string, phone: string, birthDate: string, password?: string) => {
+  register: async (name: string, email: string, phone: string, birthDate: string, password?: string, referralCode?: string) => {
     try {
-      return await request('POST', '/api/auth/register', { name, email, phone, birthDate, password });
+      return await request('POST', '/api/auth/register', { name, email, phone, birthDate, password, referralCode });
     } catch {
       const { user, wallet } = getClientUser(email, name, phone, birthDate);
       return { success: true, user, wallet };
     }
   },
 
-  loginWithGoogle: async (data: { email: string; name: string; birthDate?: string; avatar?: string; googleId?: string }) => {
+  loginWithGoogle: async (data: { email: string; name: string; birthDate?: string; avatar?: string; googleId?: string; referralCode?: string }) => {
     try {
       return await request('POST', '/api/auth/google', data);
     } catch {
@@ -555,6 +555,24 @@ export const api = {
       return await request('GET', `/api/kyc/${userId}`);
     } catch {
       return { success: true, kyc: null };
+    }
+  },
+
+  // Referrals
+  getReferrals: async (userId: string) => {
+    try {
+      return await request('GET', `/api/referrals/${userId}`);
+    } catch {
+      return {
+        success: true,
+        referralCode: `KWZ-${userId.slice(-5).toUpperCase()}`,
+        referralEarningsAoa: 0,
+        referralsCount: 0,
+        commissionPercent: 1.0,
+        referralEnabled: true,
+        referredUsers: [],
+        records: [],
+      };
     }
   },
 

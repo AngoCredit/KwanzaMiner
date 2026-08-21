@@ -26,6 +26,7 @@ class InMemoryDatabase {
   chatMessages: ChatMessage[] = [];
   notifications: Notification[] = [];
   auditLogs: AuditLog[] = [];
+  referralRecords: any[] = [];
 
   kcRate: KcRate = {
     rateAoa: 100.0,
@@ -43,6 +44,8 @@ class InMemoryDatabase {
     investmentEnabled: true,
     minDepositAoa: 6000,
     minWithdrawalAoa: 5000,
+    referralEnabled: true,
+    referralCommissionPercent: 1.0,
     announcementMessage: 'Plataforma KwanzaCoin operacional. Depósitos via Multicaixa 24/7.',
     announcementActive: true
   };

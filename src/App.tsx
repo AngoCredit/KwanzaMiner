@@ -32,6 +32,7 @@ import { HistoryTab } from './components/dashboard/HistoryTab.tsx';
 import { KycTab } from './components/dashboard/KycTab.tsx';
 import { ProfileTab } from './components/dashboard/ProfileTab.tsx';
 import { SupportTab } from './components/dashboard/SupportTab.tsx';
+import { ReferralTab } from './components/dashboard/ReferralTab.tsx';
 
 // Admin dashboard
 import { AdminDashboard } from './components/admin/AdminDashboard.tsx';
@@ -131,6 +132,7 @@ const AppContent: React.FC = () => {
           {dashboardTab === 'investimentos' && <InvestmentsTab onNavigate={handleNavigateDashboard} />}
           {dashboardTab === 'ganhos' && <OverviewTab onNavigate={handleNavigateDashboard} />}
           {dashboardTab === 'kwanzacoin' && <KwanzaCoinTab onNavigate={handleNavigateDashboard} />}
+          {dashboardTab === 'afiliados' && <ReferralTab />}
           {dashboardTab === 'depositar' && <DepositTab onNavigate={handleNavigateDashboard} />}
           {dashboardTab === 'levantar' && <WithdrawTab onNavigate={handleNavigateDashboard} />}
           {dashboardTab === 'historico' && <HistoryTab />}

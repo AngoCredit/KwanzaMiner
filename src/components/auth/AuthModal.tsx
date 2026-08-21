@@ -33,6 +33,13 @@ export const AuthModal: React.FC = () => {
   const [birthDate, setBirthDate] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [referralCode, setReferralCode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('ref') || params.get('referral') || '';
+    }
+    return '';
+  });
   const [acceptTerms, setAcceptTerms] = useState(true);
   const [error, setError] = useState('');
 
@@ -73,7 +80,7 @@ export const AuthModal: React.FC = () => {
           setError('As palavras-passe não coincidem');
           return;
         }
-        await register(name, email, phone, birthDate, password);
+        await register(name, email, phone, birthDate, password, referralCode);
       }
     } catch (err: any) {
       setError(err.message || 'Ocorreu um erro no processamento.');
@@ -83,7 +90,7 @@ export const AuthModal: React.FC = () => {
   const handleGoogleAuth = async () => {
     setError('');
     try {
-      await loginWithGoogle();
+      await loginWithGoogle(referralCode);
     } catch (err: any) {
       setError(err.message || 'Erro ao comunicar com a autenticação Google.');
     }

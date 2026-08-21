@@ -123,6 +123,69 @@ class InvestmentEngine {
     supabaseSync.syncInvestment(newInv);
     supabaseSync.syncWallet(wallet);
 
+    // ── Referral Commission Processing ─────────────────────────
+    if (user.referredBy && db.systemSettings.referralEnabled !== false) {
+      const referrer = db.users.get(user.referredBy);
+      if (referrer && referrer.status === 'active') {
+        const commPercent = db.systemSettings.referralCommissionPercent ?? 1.0;
+        const commissionAmount = amount * (commPercent / 100);
+
+        if (commissionAmount > 0) {
+          const referrerWallet = db.wallets.get(referrer.id);
+          if (referrerWallet) {
+            referrerWallet.availableBalance += commissionAmount;
+            referrerWallet.totalBalance = referrerWallet.availableBalance + referrerWallet.investedBalance + (referrerWallet.kwanzaCoinBalance * db.kcRate.rateAoa);
+            referrerWallet.updatedAt = new Date().toISOString();
+
+            referrer.referralEarningsAoa = (referrer.referralEarningsAoa || 0) + commissionAmount;
+
+            supabaseSync.syncWallet(referrerWallet);
+            supabaseSync.syncUser(referrer);
+
+            const refLedger: LedgerEntry = {
+              id: `led-ref-${Date.now()}`,
+              userId: referrer.id,
+              type: 'REFERRAL_COMMISSION',
+              amount: commissionAmount,
+              currency: 'AOA',
+              description: `Comissão de indicação: ${user.name} subscreveu o plano ${plan.name} (${amount.toLocaleString('pt-AO')} AOA)`,
+              balanceBefore: referrerWallet.availableBalance - commissionAmount,
+              balanceAfter: referrerWallet.availableBalance,
+              referenceId: newInv.id,
+              createdAt: new Date().toISOString()
+            };
+            db.ledger.unshift(refLedger);
+
+            const refNotif = {
+              id: `notif-ref-${Date.now()}`,
+              userId: referrer.id,
+              title: '🎁 Comissão de Indicação Recebida',
+              message: `Recebeu ${commissionAmount.toLocaleString('pt-AO', { minimumFractionDigits: 2 })} AOA de comissão (${commPercent}%) pela subscrição de ${user.name}!`,
+              type: 'referral_commission',
+              read: false,
+              createdAt: new Date().toISOString()
+            };
+            (db.notifications as any[]).push(refNotif);
+            this.broadcast({ type: 'NOTIFICATION', notification: refNotif });
+
+            const refRecord: any = {
+              id: `refrec-${Date.now()}`,
+              referrerId: referrer.id,
+              referredUserId: user.id,
+              referredUserName: user.name,
+              referredUserEmail: user.email,
+              investmentId: newInv.id,
+              planName: plan.name,
+              investmentAmount: amount,
+              commissionAmount,
+              createdAt: new Date().toISOString()
+            };
+            db.referralRecords.unshift(refRecord);
+          }
+        }
+      }
+    }
+
     return { success: true, investment: newInv, wallet };
   }
 
