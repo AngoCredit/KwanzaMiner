@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 
 export const AdminSettingsTab: React.FC = () => {
-  const { currentUser, showToast, triggerConfetti } = useApp();
+  const { currentUser, showToast, triggerConfetti, refreshAll } = useApp();
 
   const [settings, setSettings] = useState({
     maintenanceMode: false,
@@ -57,7 +57,9 @@ export const AdminSettingsTab: React.FC = () => {
       const res = await api.updateSystemSettings(settings, currentUser.id);
       if (res.success) {
         triggerConfetti();
-        showToast('Configurações globais do sistema salvas com sucesso!', 'success');
+        showToast('Configurações globais do sistema salvas com sucesso! As alterações entram em vigor imediatamente.', 'success');
+        // Reload settings across all contexts so user-facing components pick up changes
+        await refreshAll();
       }
     } catch (err: any) {
       showToast(err.message || 'Erro ao guardar configurações', 'error');

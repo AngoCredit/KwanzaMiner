@@ -3,7 +3,6 @@ import { useApp } from '../../context/AppContext.tsx';
 import { api } from '../../lib/api.ts';
 import { 
   ArrowDownLeft, 
-  Building, 
   Upload, 
   CheckCircle2, 
   AlertCircle, 
@@ -12,7 +11,8 @@ import {
   FileText,
   ShieldCheck,
   Zap,
-  Info
+  Info,
+  Ban
 } from 'lucide-react';
 
 interface DepositTabProps {
@@ -20,7 +20,7 @@ interface DepositTabProps {
 }
 
 export const DepositTab: React.FC<DepositTabProps> = ({ onNavigate }) => {
-  const { currentUser, withdrawals, showToast, refreshAll, triggerConfetti } = useApp();
+  const { currentUser, withdrawals, showToast, refreshAll, triggerConfetti, systemSettings } = useApp();
 
   const [amount, setAmount] = useState<number>(6000);
   const [method, setMethod] = useState<string>('multicaixa_express');
@@ -63,6 +63,16 @@ export const DepositTab: React.FC<DepositTabProps> = ({ onNavigate }) => {
     e.preventDefault();
     if (!currentUser) return;
 
+    // Check if deposits are enabled by admin
+    if (systemSettings.maintenanceMode) {
+      showToast('A plataforma está em manutenção. Os depósitos estão temporariamente suspensos.', 'error');
+      return;
+    }
+    if (!systemSettings.depositEnabled) {
+      showToast('Os depósitos estão temporáriamente suspensos pela administração. Por favor aguarde a reabertura.', 'error');
+      return;
+    }
+
     if (amount < paymentDetails.minAmount) {
       showToast(`O depósito mínimo permitido é de ${paymentDetails.minAmount.toLocaleString('pt-AO')} AOA.`, 'error');
       return;
@@ -86,7 +96,10 @@ export const DepositTab: React.FC<DepositTabProps> = ({ onNavigate }) => {
 
       if (res.success) {
         triggerConfetti();
-        showToast('Depósito submetido com sucesso! Aguarde a verificação da equipa financeira.', 'success');
+        showToast(
+          `✅ Depósito registado com sucesso! O seu saldo será creditado após validação do comprovativo (5-15 minutos).`,
+          'success'
+        );
         setAmount(6000);
         setProofUrl('');
         await refreshAll();
@@ -100,7 +113,35 @@ export const DepositTab: React.FC<DepositTabProps> = ({ onNavigate }) => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Maintenance / Deposit Suspended Banner */}
+      {(systemSettings.maintenanceMode || !systemSettings.depositEnabled) && (
+        <div className="flex items-start gap-3 p-4 rounded-2xl bg-red-50 border border-red-300 text-red-800">
+          <Ban className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+          <div>
+            <div className="font-bold text-sm">
+              {systemSettings.maintenanceMode ? 'Plataforma em Manutenção' : 'Depósitos Suspensos Temporariamente'}
+            </div>
+            <p className="text-xs mt-1">
+              {systemSettings.maintenanceMode
+                ? 'O sistema encontra-se em manutenção programada. Todas as operações estão suspensas. Tente novamente mais tarde.'
+                : 'A administração suspendeu temporariamente os depósitos. Por favor aguarde a reabertura do sistema.'}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Pending Deposit Info Banner */}
+      <div className="flex items-start gap-3 p-4 rounded-2xl bg-amber-50 border border-amber-300 text-amber-900">
+        <Clock className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+        <div>
+          <div className="font-bold text-xs uppercase tracking-wide">Como funciona o crédito do saldo?</div>
+          <p className="text-xs mt-1 leading-relaxed">
+            Após submeter o comprovativo, o seu depósito fica <strong>pendente de validação manual</strong> pela equipa financeira.
+            O saldo só é creditado na sua carteira <strong>após aprovação</strong> (geralmente 5 a 15 minutos em dias úteis).
+            Consulte o separador <strong>Histórico</strong> para acompanhar o estado do seu depósito.
+          </p>
+        </div>
+      </div>
       <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-slate-900 flex items-center gap-2">

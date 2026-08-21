@@ -21,7 +21,7 @@ interface WithdrawTabProps {
 }
 
 export const WithdrawTab: React.FC<WithdrawTabProps> = ({ onNavigate }) => {
-  const { currentUser, wallet, investments, withdrawals, transactions, refreshAll, showToast, triggerConfetti } = useApp();
+  const { currentUser, wallet, investments, withdrawals, transactions, refreshAll, showToast, triggerConfetti, systemSettings } = useApp();
 
   const [bankName, setBankName] = useState<string>('BAI - Banco Angolano de Investimentos');
   const [accountHolder, setAccountHolder] = useState<string>(currentUser?.name || '');
@@ -68,6 +68,16 @@ export const WithdrawTab: React.FC<WithdrawTabProps> = ({ onNavigate }) => {
   const handleCreateWithdrawal = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentUser) return;
+
+    // Check system settings
+    if (systemSettings.maintenanceMode) {
+      showToast('A plataforma está em manutenção. Os levantamentos estão temporàriamente suspensos.', 'error');
+      return;
+    }
+    if (!systemSettings.withdrawalEnabled) {
+      showToast('Os levantamentos estão temporàriamente suspensos pela administração. Por favor aguarde a reabertura.', 'error');
+      return;
+    }
 
     if (!hasReachedMinThreshold) {
       showToast(`Aviso: O seu saldo de lucro disponível (${availableBalance.toLocaleString('pt-AO')} AOA) ainda não atingiu o limiar mínimo de ${MIN_WITHDRAWAL_AOA.toLocaleString('pt-AO')} AOA para solicitar saques.`, 'error');

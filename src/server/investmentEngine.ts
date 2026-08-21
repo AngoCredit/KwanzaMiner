@@ -71,6 +71,11 @@ class InvestmentEngine {
 
     if (!user || !wallet) return { success: false, message: 'Utilizador ou carteira não encontrados.' };
     if (!plan) return { success: false, message: 'Plano de investimento inválido.' };
+
+    // Check system settings
+    if (db.systemSettings.maintenanceMode) return { success: false, message: 'Plataforma em manutenção. Subscrições suspensas.' };
+    if (!db.systemSettings.investmentEnabled) return { success: false, message: 'A subscrição de novos planos está temporàriamente suspensa.' };
+
     if (amount < plan.minimumAmount) return { success: false, message: `Montante mínimo: ${plan.minimumAmount} AOA` };
     if (amount > wallet.availableBalance) return { success: false, message: 'Saldo disponível insuficiente na carteira.' };
 
@@ -159,10 +164,23 @@ class InvestmentEngine {
     const user = db.users.get(userId);
     if (!user) return { success: false, message: 'Utilizador não encontrado.' };
 
+    // Check system settings
+    if (db.systemSettings.maintenanceMode) {
+      return { success: false, message: 'Plataforma em manutenção. Depósitos suspensos temporariamente.' };
+    }
+    if (!db.systemSettings.depositEnabled) {
+      return { success: false, message: 'Os depósitos estão temporàriamente suspensos pela administração.' };
+    }
+    if (amount < db.systemSettings.minDepositAoa) {
+      return { success: false, message: `O depósito mínimo é de ${db.systemSettings.minDepositAoa} AOA.` };
+    }
+
     const depId = `dep-${Date.now()}`;
     const newDep: Deposit = {
       id: depId,
       userId,
+      userName: user.name,
+      userEmail: user.email,
       amount,
       method: method || 'multicaixa_express',
       phoneOrEntity: phoneOrEntity || '00392',
@@ -209,6 +227,20 @@ class InvestmentEngine {
     };
 
     db.ledger.unshift(ledger);
+
+    // Push in-app notification to depositor
+    const notif: any = {
+      id: `notif-dep-${Date.now()}`,
+      userId: dep.userId,
+      title: '✅ Depósito Aprovado',
+      message: `O seu depósito de ${dep.amount.toLocaleString('pt-AO')} AOA foi validado e creditado na sua carteira.`,
+      type: 'deposit_approved',
+      read: false,
+      createdAt: new Date().toISOString()
+    };
+    (db.notifications as any[]).push(notif);
+    this.broadcast({ type: 'NOTIFICATION', notification: notif });
+
     supabaseSync.syncDeposit(dep);
 
     return { success: true, deposit: dep, wallet };
@@ -218,6 +250,12 @@ class InvestmentEngine {
   createWithdrawal(userId: string, data: { amount: number; bankName: string; accountNumber: string; iban?: string; holderName: string; note?: string }) {
     const wallet = db.wallets.get(userId);
     if (!wallet) return { success: false, message: 'Carteira não encontrada.' };
+
+    // Check system settings
+    if (db.systemSettings.maintenanceMode) return { success: false, message: 'Plataforma em manutenção. Levantamentos suspensos.' };
+    if (!db.systemSettings.withdrawalEnabled) return { success: false, message: 'Os levantamentos estão temporàriamente suspensos.' };
+    if (data.amount < db.systemSettings.minWithdrawalAoa) return { success: false, message: `O levantamento mínimo é de ${db.systemSettings.minWithdrawalAoa} AOA.` };
+
     if (data.amount > wallet.availableBalance) return { success: false, message: 'Saldo disponível insuficiente para levantamento.' };
 
     wallet.availableBalance -= data.amount;

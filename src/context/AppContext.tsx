@@ -19,6 +19,7 @@ import type {
   KcRate,
   Stats,
   Notification,
+  SystemSettings,
 } from '../types/index.ts';
 
 // ─── Context shape ────────────────────────────────────────────────────────────
@@ -51,6 +52,9 @@ interface AppContextValue {
   stats: Stats;
   notifications: Notification[];
   unreadCount: number;
+
+  // System settings (admin-controlled operational flags)
+  systemSettings: SystemSettings;
 
   // Actions
   refreshAll: () => Promise<void>;
@@ -153,6 +157,18 @@ export const defaultPlans: InvestmentPlan[] = [
 // ─── Context ─────────────────────────────────────────────────────────────────
 const AppContext = createContext<AppContextValue | null>(null);
 
+// ─── Default system settings ─────────────────────────────────────────────────
+const defaultSystemSettings: SystemSettings = {
+  maintenanceMode: false,
+  depositEnabled: true,
+  withdrawalEnabled: true,
+  investmentEnabled: true,
+  minDepositAoa: 6000,
+  minWithdrawalAoa: 5000,
+  announcementMessage: 'Plataforma KwanzaCoin operacional. Depósitos via Multicaixa 24/7.',
+  announcementActive: true,
+};
+
 // ─── Provider ────────────────────────────────────────────────────────────────
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentRoute, setCurrentRouteState] = useState<string>('/');
@@ -164,6 +180,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [plans, setPlans] = useState<InvestmentPlan[]>(defaultPlans);
   const [kcRate, setKcRate] = useState<KcRate>(defaultKcRate);
   const [stats, setStats] = useState<Stats>(defaultStats);
+  const [systemSettings, setSystemSettings] = useState<SystemSettings>(defaultSystemSettings);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
@@ -200,12 +217,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   }, []);
 
-  // ─ Load public data (plans, stats, kcRate) ─────────────────
+  // ─ Load public data (plans, stats, kcRate, systemSettings) ──
   const loadPublicData = useCallback(async () => {
     try {
-      const [plansRes, statsRes] = await Promise.allSettled([
+      const [plansRes, statsRes, settingsRes] = await Promise.allSettled([
         api.getPlans(),
         api.getPublicStats(),
+        api.getSystemSettings(),
       ]);
 
       if (plansRes.status === 'fulfilled' && plansRes.value?.plans && Array.isArray(plansRes.value.plans) && plansRes.value.plans.length > 0) {
@@ -214,6 +232,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (statsRes.status === 'fulfilled' && statsRes.value) {
         if (statsRes.value.stats) setStats(statsRes.value.stats);
         if (statsRes.value.kcRate) setKcRate(statsRes.value.kcRate);
+      }
+      if (settingsRes.status === 'fulfilled' && settingsRes.value?.settings) {
+        setSystemSettings((prev) => ({ ...prev, ...settingsRes.value.settings }));
       }
     } catch {
       // Silent fail – defaultPlans remain active
@@ -479,6 +500,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     stats,
     notifications,
     unreadCount,
+    systemSettings,
     refreshAll,
     showToast,
     toastMessage,

@@ -28,7 +28,8 @@ export const InvestmentsTab: React.FC<InvestmentsTabProps> = ({ onNavigate }) =>
     kcRate, 
     refreshAll, 
     showToast, 
-    triggerConfetti 
+    triggerConfetti,
+    systemSettings
   } = useApp();
 
   const [selectedPlan, setSelectedPlan] = useState<InvestmentPlan | null>(null);
@@ -48,6 +49,16 @@ export const InvestmentsTab: React.FC<InvestmentsTabProps> = ({ onNavigate }) =>
   const handleConfirmInvestment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentUser || !selectedPlan) return;
+
+    // Check system settings
+    if (systemSettings.maintenanceMode) {
+      showToast('A plataforma está em manutenção. As subscrições estão temporariamente suspensas.', 'error');
+      return;
+    }
+    if (!systemSettings.investmentEnabled) {
+      showToast('A subscrição de novos planos está temporàriamente suspensa pela administração.', 'error');
+      return;
+    }
 
     if (investAmount > availableBalance) {
       showToast(`Saldo insuficiente (${availableBalance.toLocaleString('pt-AO')} AOA). Por favor efetue um depósito primeiro.`, 'error');

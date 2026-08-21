@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext.tsx';
+import { api } from '../../lib/api.ts';
 import { 
   Clock, 
   Search, 
@@ -11,16 +12,29 @@ import {
   Coins, 
   Cpu, 
   CheckCircle2, 
-  AlertCircle 
+  AlertCircle,
+  XCircle
 } from 'lucide-react';
 
 export const HistoryTab: React.FC = () => {
-  const { ledgerEntries, transactions, showToast } = useApp();
+  const { ledgerEntries, transactions, showToast, currentUser } = useApp();
+  const [deposits, setDeposits] = useState<any[]>([]);
 
   const [filterType, setFilterType] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState<string>('');
 
   const safeEntries = ledgerEntries || transactions || [];
+
+  // Load user deposits to show pending status
+  useEffect(() => {
+    if (!currentUser) return;
+    api.getDeposits(currentUser.id).then((res) => {
+      if (res?.deposits) setDeposits(res.deposits);
+    }).catch(() => {});
+  }, [currentUser]);
+
+  const pendingDeposits = deposits.filter(d => d.status === 'pending');
+  const approvedDeposits = deposits.filter(d => d.status === 'approved');
 
   // Filter entries safely
   const filteredLedger = safeEntries.filter(entry => {
@@ -77,7 +91,30 @@ export const HistoryTab: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Pending Deposits Alert */}
+      {pendingDeposits.length > 0 && (
+        <div className="p-4 rounded-2xl bg-amber-50 border border-amber-300">
+          <div className="flex items-center gap-2 mb-3">
+            <Clock className="w-5 h-5 text-amber-600" />
+            <span className="font-bold text-amber-900 text-sm">Depósitos Pendentes de Validação ({pendingDeposits.length})</span>
+          </div>
+          <div className="space-y-2">
+            {pendingDeposits.map(dep => (
+              <div key={dep.id} className="flex items-center justify-between p-3 rounded-xl bg-white border border-amber-200">
+                <div>
+                  <div className="text-xs font-bold text-slate-900">{dep.amount.toLocaleString('pt-AO')} AOA</div>
+                  <div className="text-[10px] text-slate-500 font-mono">{dep.id} • {new Date(dep.createdAt).toLocaleString('pt-AO')}</div>
+                </div>
+                <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                  Em Validação
+                </span>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-amber-800 mt-2">⏳ O saldo será creditado automaticamente após aprovação pela equipa financeira.</p>
+        </div>
+      )}
       <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-slate-900">Histórico de Movimentações & Ledger</h1>
