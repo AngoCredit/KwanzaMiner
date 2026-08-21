@@ -57,14 +57,14 @@ function getClientUser(email: string, name?: string, phone?: string, birthDate?:
 
     const wallet = {
       userId: user.id,
-      totalBalance: 500000,
-      availableBalance: 500000,
+      totalBalance: 0,
+      availableBalance: 0,
       investedBalance: 0,
       accumulatedProfit: 0,
-      kwanzaCoinBalance: 1500,
+      kwanzaCoinBalance: 0,
       lockedBalance: 0,
-      miningBoostLevel: 3,
-      miningMultiplier: 2.5,
+      miningBoostLevel: 1,
+      miningMultiplier: 1.0,
       updatedAt: new Date().toISOString(),
     };
 
@@ -314,14 +314,14 @@ export const api = {
           success: true,
           wallet: {
             userId: 'usr-admin-001',
-            totalBalance: 500000,
-            availableBalance: 500000,
+            totalBalance: 0,
+            availableBalance: 0,
             investedBalance: 0,
             accumulatedProfit: 0,
-            kwanzaCoinBalance: 1500,
+            kwanzaCoinBalance: 0,
             lockedBalance: 0,
-            miningBoostLevel: 3,
-            miningMultiplier: 2.5,
+            miningBoostLevel: 1,
+            miningMultiplier: 1.0,
             updatedAt: new Date().toISOString(),
           },
         };
