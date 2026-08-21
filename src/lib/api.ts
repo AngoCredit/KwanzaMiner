@@ -592,35 +592,8 @@ export const api = {
           return JSON.parse(stored);
         } catch {}
       }
-
-      const defaultMessages = [
-        {
-          id: 'chat-seed-1',
-          userId: 'usr-admin-001',
-          userName: 'Suporte KwanzaMiner',
-          userRole: 'superadmin',
-          message: 'Bem-vindo à comunidade KwanzaCoin! Apoio oficial e simulação online 24/7.',
-          isDirectAdmin: false,
-          createdAt: new Date(Date.now() - 3600000).toISOString(),
-        },
-        {
-          id: 'chat-seed-2',
-          userId: 'usr-demo-002',
-          userName: 'João Silva',
-          userRole: 'user',
-          message: 'Excelente taxa de retorno nos planos de mineração. Tudo a funcionar perfeitamente!',
-          isDirectAdmin: false,
-          createdAt: new Date(Date.now() - 1800000).toISOString(),
-        },
-      ];
-
-      if (typeof localStorage !== 'undefined') {
-        try {
-          localStorage.setItem('kwz_chat_messages', JSON.stringify(defaultMessages));
-        } catch {}
-      }
-
-      return defaultMessages;
+      // Return empty chat — no fabricated seed messages
+      return [];
     }
   },
 
@@ -703,28 +676,7 @@ export const api = {
     } catch {
       return {
         success: true,
-        users: [
-          {
-            id: 'usr-admin-001',
-            name: 'Kwanza Admin',
-            email: 'bytekwanza@gmail.com',
-            phone: '+244 923 000 000',
-            role: 'superadmin',
-            status: 'active',
-            kycStatus: 'approved',
-            wallet: { availableBalance: 500000, kwanzaCoinBalance: 1500 },
-          },
-          {
-            id: 'usr-demo-002',
-            name: 'João Silva',
-            email: 'joao.silva@gmail.com',
-            phone: '+244 923 111 222',
-            role: 'user',
-            status: 'active',
-            kycStatus: 'approved',
-            wallet: { availableBalance: 60000, kwanzaCoinBalance: 120 },
-          },
-        ],
+        users: [],
       };
     }
   },
